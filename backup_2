@@ -1,0 +1,111 @@
+
+///////////////////////////////////////////////////////////////////spam_main\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+load spambase;
+
+spam_data =  spambase(randperm(end),:);
+
+spam_train = spam_data(1:2301,1:57);
+spam_test = spam_data(2302:end,1:57);
+
+label_train = spam_data(1:2301,58);
+label_test = spam_data(2302:end,58);
+
+[x1,y1] = size(spam_train);
+[x2,y2] = size(spam_test);
+spam_train=[ones(x1,1) spam_train];
+spam_test=[ones(x2,1) spam_test];
+
+norm_train = featureNormalize(spam_train);
+norm_test = featureNormalize(spam_test);
+
+initial_theta = zeros(size(spam_train,2),1);
+
+%
+% Batch Gradient Descent, normalized data
+alpha = 0.001;
+[theta_batchGD_norm, cost_batchGD_norm,counter_batchGD_norm,costTest_batchGD_norm] = batchGD(norm_train,label_train,initial_theta,alpha,norm_test,label_test);
+htheta_test = sigmoid(norm_test*theta_batchGD_norm);
+p_test=zeros(size(norm_test,1),1);
+p_test = htheta_test >= 0.5;
+
+accu_test=0;
+for col=1:size(label_test,1)
+    if p_test(col) == label_test(col)
+        accu_test = accu_test+1;
+    end
+end
+accu_test
+accuTest_batchGD_norm = (accu_test*100)/size(label_test,1)
+%
+htheta_train = sigmoid(norm_train*theta_batchGD_norm);
+p_train=zeros(size(spam_train,1),1);
+p_train = htheta_train >= 0.5;
+
+accu_train=0;
+for col=1:size(label_train,1)
+    if p_train(col) == label_train(col)
+        accu_train = accu_train+1;
+    end
+end
+accu_train
+accuTrain_batchGD_norm = (accu_train*100)/size(label_train,1)
+%}
+%plot of cost function
+iter = [1:1:counter_batchGD_norm-1]
+plot(iter,cost_batchGD_norm)
+hold on
+plot(iter,costTest_batchGD_norm,'r')
+%}
+
+%{
+% Newtons method , normalized data
+alpha = 0.0001;
+initial_theta = zeros(size(spam_train,2),1);
+[theta_newton_norm, cost_newton_norm,counter_newton_norm] = newton(norm_train,label_train,initial_theta,alpha);
+htheta_test = sigmoid(norm_test*theta_newton_norm);
+p = htheta_test >= 0.5;
+
+accu=0;
+for col=1:size(label_test,1)
+    if p(col) == label_test(col)
+        accu = accu+1;
+    end
+end
+accu
+accu_newton_norm = (accu*100)/size(label_test,1);
+%plot of cost function
+iter = [1:1:counter_newton_norm-1]
+plot(iter,cost_newton_norm)
+%}
+
+%{
+% glmfit , norm data
+theta_glm_norm = glmfit(norm_train,label_train);
+pred_glm_norm = sigmoid(theta_glm_norm(1)+norm_test*theta_glm_norm(2:end));
+p = pred_glm_norm >= 0.5;
+
+accu=0;
+for col=1:size(label_test,1)
+    if p(col) == label_test(col)
+        accu = accu+1;
+    end
+end
+accu
+accu_glm_norm = (accu*100)/size(label_test,1);
+%}
+
+%{
+%Fetaure Analysis
+spam_tp
+%}
+
+
+
+
+
+
+
+
+
+
+
